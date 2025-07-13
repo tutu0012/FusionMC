@@ -1,0 +1,9 @@
+accessWidener v1 named
+
+accessible class net/minecraft/client/render/Frustum
+accessible method net/minecraft/client/render/Frustum isVisible (Lnet/minecraft/util/math/Box;)Z
+accessible method net/minecraft/client/render/Frustum isVisible (DDDDDD)Z
+accessible field net/minecraft/client/render/Frustum x D
+accessible field net/minecraft/client/render/Frustum y D
+accessible field net/minecraft/client/render/Frustum z D
+accessible field net/minecraft/client/render/Frustum frustumIntersection Lorg/joml/FrustumIntersection;
