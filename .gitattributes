@@ -1,0 +1,12 @@
+# Forces all files to have LF line endings in the repository
+# and converts CRLF to LF on checkout.
+* text=auto eol=lf
+
+# Binary files, does not convert line endings
+*.exe binary
+*.jar binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.wav binary
+*.mp3 binary
