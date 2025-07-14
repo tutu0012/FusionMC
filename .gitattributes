@@ -1,8 +1,11 @@
-# Forces all files to have LF line endings in the repository
-# and converts CRLF to LF on checkout.
-* text=auto eol=lf
+# Forces all text files to use native EOL based on OS
+* text=auto
 
-# Binary files, does not convert line endings
+# Force Windows scripts to use CRLF (required for cmd.exe)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files (no EOL conversion)
 *.exe binary
 *.jar binary
 *.png binary

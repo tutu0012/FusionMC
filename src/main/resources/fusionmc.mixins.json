@@ -5,10 +5,12 @@
   "compatibilityLevel": "JAVA_17",
 
   "mixins": [
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "ChunkRenderingMixin"
   ],
   "client": [
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "ChunkRenderingMixin"
   ],
   "injectors": {
     "defaultRequire": 1

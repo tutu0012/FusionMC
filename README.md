@@ -9,13 +9,13 @@ my goal? to make this mod even better than Sodium. to do that, I’ve been divin
 but enough about me — here’s what you really came for:
 
 # Mod Details
-- **Total hours spent**: 82+
+- **Total hours spent**: 87+
 
 - **Optimizations planned**: frustum culling, improved chunk rendering, culling for leaves and particles, entity and tile entity culling, animation sleeping, better lighting engine
 
-- **Currently implemented**: frustum culling
+- **Currently implemented**: frustum culling, improved chunk rendering
 
-- **Latest version**: `0.1.0e-beta+mc1.20.1`
+- **Latest version**: `0.1.1d-beta+mc1.20.1`
 
 # How to use (in-game)
 
@@ -24,7 +24,7 @@ but enough about me — here’s what you really came for:
 # How to use (IDEs, modifying)
 
 - 1. download the project here
-- 2. open the project on a IDE
+- 2. open the project in an IDE
 - 3. do whatever you want to do with it!
 
 # Want to contribute?

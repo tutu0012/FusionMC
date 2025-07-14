@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.fusionmc"
-version = "0.1.0e-beta+mc1.20.1"
+version = "0.1.1d-beta+mc1.20.1"
 
 repositories {
     mavenCentral()

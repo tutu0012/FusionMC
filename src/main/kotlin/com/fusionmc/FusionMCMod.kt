@@ -6,6 +6,8 @@ import com.fusionmc.manager.FusionCullingManager
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.Text
@@ -22,7 +24,17 @@ class FusionMCMod : ClientModInitializer {
 
         const val MOD_ID = "fusionmc"
         const val MOD_NAME = "FusionMC"
-        const val VERSION = "0.1.0e-beta+mc1.20.1"
+        const val VERSION = "0.1.1d-beta+mc1.20.1"
+        
+        // --- Static getters for mixins ---
+        @JvmStatic
+        fun isChunkCullingEnabled(): Boolean = INSTANCE.enableChunkCulling
+        @JvmStatic
+        fun isDistanceCullingEnabled(): Boolean = INSTANCE.enableDistanceCulling
+        @JvmStatic
+        fun getRenderDistance(): Int = INSTANCE.maxRenderDistance
+        @JvmStatic
+        fun isChunkRenderingOptimizationEnabled(): Boolean = INSTANCE.enableChunkRenderingOptimization
     }
 
     // Mod settings
@@ -41,6 +53,8 @@ class FusionMCMod : ClientModInitializer {
     var cullingUpdateInterval = 5 // ticks
         private set
     var enableFrustumCulling = true
+        private set
+    var enableChunkRenderingOptimization = true
         private set
 
     // Main components
@@ -71,6 +85,9 @@ class FusionMCMod : ClientModInitializer {
 
         // Register events
         registerEvents()
+
+        // Register commands
+        registerCommands()
 
         println("[$MOD_NAME] Initialization complete!")
     }
@@ -118,6 +135,111 @@ class FusionMCMod : ClientModInitializer {
         )
 
         println("[$MOD_NAME] Successfully registered keybinds")
+    }
+
+    /**
+     * Registers client commands
+     */
+    private fun registerCommands() {
+        ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
+            // Register /fusion command
+            dispatcher.register(
+                ClientCommandManager.literal("fusion")
+                    .executes { context ->
+                        showHelp()
+                        1
+                    }
+                    .then(
+                        ClientCommandManager.literal("help")
+                            .executes { context ->
+                                showHelp()
+                                1
+                            }
+                    )
+                    .then(
+                        ClientCommandManager.literal("toggle")
+                            .then(
+                                ClientCommandManager.literal("frustum")
+                                    .executes { context ->
+                                        val enabled = toggleFrustumCulling()
+                                        sendMessage("§6Frustum Culling: ${if (enabled) "§aON" else "§cOFF"}")
+                                        1
+                                    }
+                            )
+                            .then(
+                                ClientCommandManager.literal("distance")
+                                    .executes { context ->
+                                        val enabled = toggleDistanceCulling()
+                                        sendMessage("§6Distance Culling: ${if (enabled) "§aON" else "§cOFF"}")
+                                        1
+                                    }
+                            )
+                            .then(
+                                ClientCommandManager.literal("blockentity")
+                                    .executes { context ->
+                                        val enabled = toggleBlockEntityCulling()
+                                        sendMessage("§6Block Entity Culling: ${if (enabled) "§aON" else "§cOFF"}")
+                                        1
+                                    }
+                            )
+                            .then(
+                                ClientCommandManager.literal("chunk")
+                                    .executes { context ->
+                                        val enabled = toggleChunkCulling()
+                                        sendMessage("§6Chunk Culling: ${if (enabled) "§aON" else "§cOFF"}")
+                                        1
+                                    }
+                            )
+                            .then(
+                                ClientCommandManager.literal("debug")
+                                    .executes { context ->
+                                        val enabled = toggleDebugMode()
+                                        sendMessage("§6Debug Mode: ${if (enabled) "§aON" else "§cOFF"}")
+                                        1
+                                    }
+                            )
+                            .then(
+                                ClientCommandManager.literal("chunkrendering")
+                                    .executes { context ->
+                                        val enabled = toggleChunkRenderingOptimization()
+                                        sendMessage("§6Chunk Rendering Optimization: ${if (enabled) "§aON" else "§cOFF"}")
+                                        1
+                                    }
+                            )
+                    )
+                    .then(
+                        ClientCommandManager.literal("status")
+                            .executes { context ->
+                                showStatus()
+                                1
+                            }
+                    )
+                    .then(
+                        ClientCommandManager.literal("stats")
+                            .executes { context ->
+                                showStats()
+                                1
+                            }
+                    )
+                    .then(
+                        ClientCommandManager.literal("clear")
+                            .executes { context ->
+                                clearCache()
+                                sendMessage("§aCache cleaned successfully!")
+                                1
+                            }
+                    )
+                    .then(
+                        ClientCommandManager.literal("reload")
+                            .executes { context ->
+                                clearCache()
+                                sendMessage("§aConfiguration reloaded!")
+                                1
+                            }
+                    )
+            )
+        }
+        println("[$MOD_NAME] Commands registered successfully")
     }
 
     /**
@@ -273,9 +395,58 @@ class FusionMCMod : ClientModInitializer {
         return debugMode
     }
 
+    fun toggleChunkRenderingOptimization(): Boolean {
+        enableChunkRenderingOptimization = !enableChunkRenderingOptimization
+        return enableChunkRenderingOptimization
+    }
+
     // --- Cache cleaner ---
     fun clearCache() {
         frustumCache.clearAll()
+    }
+
+
+
+    // --- Command helpers ---
+    private fun sendMessage(message: String) {
+        net.minecraft.client.MinecraftClient.getInstance().player?.sendMessage(
+            Text.literal(message), false
+        )
+    }
+
+    private fun showHelp() {
+        sendMessage("§6=== FusionMC Commands ===")
+        sendMessage("§f/fusion help §7- Show this help")
+        sendMessage("§f/fusion toggle <type> §7- Toggle a functionality")
+        sendMessage("§f/fusion status §7- Show current status")
+        sendMessage("§f/fusion stats §7- Show culling statistics")
+        sendMessage("§f/fusion clear §7- Clear culling cache")
+        sendMessage("§f/fusion reload §7- Reload configurations")
+        sendMessage("§7Types: frustum, distance, blockentity, chunk, debug, chunkrendering")
+    }
+
+    private fun showStatus() {
+        sendMessage("§6=== FusionMC Status ===")
+        sendMessage("§fMod version: $VERSION")
+        sendMessage("§fFrustum Culling: ${if (enableFrustumCulling) "§aON" else "§cOFF"}")
+        sendMessage("§fDistance Culling: ${if (enableDistanceCulling) "§aON" else "§cOFF"}")
+        sendMessage("§fBlock Entity Culling: ${if (enableBlockEntityCulling) "§aON" else "§cOFF"}")
+        sendMessage("§fChunk Culling: ${if (enableChunkCulling) "§aON" else "§cOFF"}")
+        sendMessage("§fDebug Mode: ${if (debugMode) "§aON" else "§cOFF"}")
+        sendMessage("§fChunk Rendering Optimization: ${if (enableChunkRenderingOptimization) "§aON" else "§cOFF"}")
+    }
+
+    private fun showStats() {
+        val stats = cullingManager.getStats()
+        val cacheStats = frustumCache.getStats()
+        val efficiency = stats.getCullingEfficiency()
+
+        sendMessage("§6=== FusionMC Statistics ===")
+        sendMessage("§fBlock Entities: §a${stats.blockEntitiesVisible} §7visible / §c${stats.blockEntitiesCulled} §7culled")
+        sendMessage("§fChunks: §a${stats.chunksVisible} §7visible / §c${stats.chunksCulled} §7culled")
+        sendMessage("§fEntities: §a${stats.entitiesVisible} §7visible / §c${stats.entitiesCulled} §7culled")
+        sendMessage("§fCache: §e${cacheStats.entityCacheSize} §7entities / §e${cacheStats.chunkCacheSize} §7chunks")
+        sendMessage("§fEfficiency: §b${"%.1f".format(efficiency * 100)}%")
     }
 }
 
